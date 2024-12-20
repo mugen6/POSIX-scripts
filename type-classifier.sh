@@ -1,18 +1,16 @@
 #!/bin/sh
 
-# a POSIX script to classify a list of test values into different categories 
-
 # List of test values
 test_values="
-0
-099
-000000055
+350
 123
 -456
 +789
+0
+099
+000000055
 0x1A3F
 0x123a4
-1e10
 0.00
 0.18
 85.67
@@ -23,9 +21,15 @@ test_values="
 28.000000001
 -456.0
 +789.0
+1e10
 2.5e-3
+-3.5e-11
+test e-456
+e123
 true
 false
+True
+TRUE
 hello world
 123abc
 xyz789
@@ -36,10 +40,9 @@ xyz789
 0x123a4k
 50.a
 51.1b
-7G.5
-5b2.1
-b53.1b
-541.c1
+7a.5
+a7.6
+54.c1
 0.1j5
 7f5
 8.2.0
@@ -52,8 +55,6 @@ b53.1b
 7=
 00=0
 "
-
-
 
 # Function to classify each value
 classify_value() {
@@ -69,6 +70,16 @@ classify_value() {
             printf '%s\t%s\n' "LongInt" "$value"
         esac
         ;;
+    # Floating point in scientific notation
+    [0-9]*[eE][+-][0-9]* | [0-9]*[eE][0-9]* | *[.][0-9]*[eE][+-][0-9]* | *[.][0-9]*[eE][0-9]*)
+        case "$value" in
+        *[!0-9.eE+-]*)
+            printf '%s\t%s\n' "String" "$value"
+            ;;
+        *)
+            printf '%s\t%s\n' "Float"  "$value"
+        esac
+    ;;
     # Floating point with leading sign
     [-+]*.*)
         case "$value" in
@@ -76,7 +87,7 @@ classify_value() {
             printf '%s\t%s\n' "String" "$value"
             ;;
         *)
-            printf '%s\t%s\n' "Float" "$value"
+            printf '%s\t%s\n' "Float"  "$value"
         esac
         ;;
     # Floating point without sign
@@ -93,7 +104,7 @@ classify_value() {
     [-+][0-9]*)
         case "$value" in
         *[!0-9-+]*)
-            printf '%s\t%s\n' "String" "$value"   # String
+            printf '%s\t%s\n' "String" "$value"
             ;;
         *)
             printf '%s\t%s\n' "Int"    "$value"   # Integer (leading plus sign removed)
@@ -103,16 +114,15 @@ classify_value() {
     [0-9]*)
         case "$value" in
         *[!0-9]*) 
-            printf '%s\t%s\n' "String" "$value"   # String
+            printf '%s\t%s\n' "String" "$value"
             ;;
         *)         
-            printf '%s\t%s\n' "Int"    "$value"   # Integer
+            printf '%s\t%s\n' "Int"    "$value"
         esac
         ;;
-
     # Booleans (only lower case)
     true|false)
-            printf '%s\t%s\n' "Bool"    "$value"
+            printf '%s\t%s\n' "Bool"   "$value"
         ;;
     # Everything else should be a string
     *)
@@ -124,3 +134,4 @@ classify_value() {
 echo "$test_values" | while IFS= read -r value; do
     [ -n "$value" ] &&  classify_value "$value"
 done
+
