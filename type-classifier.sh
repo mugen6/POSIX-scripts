@@ -57,6 +57,7 @@ a7.6
 7=
 00=0
 "
+
 classify_type() {
     value="$1"
     case "$value" in
@@ -130,9 +131,7 @@ classify_type() {
     esac
 }
 
-
 printf %s "$test_values" | while IFS= read -r value; do
     [ -n "$value" ] && classify_type "$value"
     printf '%s\t%s\n' "$type" "$value"
 done
-
