@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# A POSIX script to classify a list of test values into different categories 
+
 # List of test values
 test_values="
 350
@@ -55,83 +57,82 @@ a7.6
 7=
 00=0
 "
-
-# Function to classify each value
-classify_value() {
+classify_type() {
     value="$1"
     case "$value" in
     # LONG256 Integer - must start with 0x/0X and contain only hex digits
     0[xX][0-9a-fA-F]*)
         case "$value" in
         0[xX][0-9a-fA-F]*[!0-9a-fA-F]*)
-            printf '%s\t%s\n' "String"  "$value" 
+            type=String
             ;;
         *)
-            printf '%s\t%s\n' "LongInt" "$value"
+            type=Int  # LongInt
         esac
         ;;
     # Floating point in scientific notation
     [0-9]*[eE][+-][0-9]* | [0-9]*[eE][0-9]* | *[.][0-9]*[eE][+-][0-9]* | *[.][0-9]*[eE][0-9]*)
         case "$value" in
         *[!0-9.eE+-]*)
-            printf '%s\t%s\n' "String" "$value"
+            type=String
             ;;
         *)
-            printf '%s\t%s\n' "Float"  "$value"
+            type=Float
         esac
     ;;
     # Floating point with leading sign
     [-+]*.*)
         case "$value" in
         *[!0-9-+.]*|*.*.*)
-            printf '%s\t%s\n' "String" "$value"
+            type=String
             ;;
         *)
-            printf '%s\t%s\n' "Float"  "$value"
+            type=Float
         esac
         ;;
     # Floating point without sign
     *.*)
         case "$value" in
         *[!0-9.]*|*.*.*)
-            printf '%s\t%s\n' "String" "$value"
+            type=String
             ;;
         *)
-            printf '%s\t%s\n' "Float"  "$value"
+            type=Float
         esac
         ;;
     # Integers with leading sign (e.g. -1 or +2)
     [-+][0-9]*)
         case "$value" in
         *[!0-9-+]*)
-            printf '%s\t%s\n' "String" "$value"
+            type=String
             ;;
         *)
-            printf '%s\t%s\n' "Int"    "$value"   # Integer (leading plus sign removed)
+            type=Int
         esac
         ;;
     # Integers without sign
     [0-9]*)
         case "$value" in
         *[!0-9]*) 
-            printf '%s\t%s\n' "String" "$value"
+            type=String
             ;;
         *)         
-            printf '%s\t%s\n' "Int"    "$value"
+            type=Int
         esac
         ;;
     # Booleans (only lower case)
     true|false)
-            printf '%s\t%s\n' "Bool"   "$value"
-        ;;
+            type=Bool
+            ;;
     # Everything else should be a string
     *)
-            printf '%s\t%s\n' "String" "$value"
+            type=String
     esac
 }
 
 
-echo "$test_values" | while IFS= read -r value; do
-    [ -n "$value" ] &&  classify_value "$value"
+printf %s "$test_values" | while IFS= read -r value; do
+    [ -n "$value" ] && classify_type "$value"
+    printf '%s\t%s\n' "$type" "$value"
 done
 
